@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta chrset="UTF 8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-offset-4 col-xs-4 text-center">
+                <table class="table table-bordered table-condensed">
+                    <tr>
+                        <td><i class="fa fa-video-camera" title="Start recording" aria-hidden="true" role="button"
+                                onclick="record()"></i></td>
+                        <td> <i class="fa fa-stop-circle-o fa-lg Rec" title="Stop recording" aria-hidden="true"
+                                role="button" onclick="stop()"></i></td>
+                        <td> <i class="fa fa-eye fa-lg" title="Preview Last Recording" aria-hidden="true" role="button"
+                                onclick="preview()"></i></td>
+                        <td> <i class="fa fa-arrow-circle-down" aria-hidden="true" onclick="download()"
+                                role="button"></i></td>
+                        <td> <i class="fa fa-cloud-upload" aria-hidden="true" onclick="upload()" role="button"></i></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <table class="table table-bordered table-condensed table-center text-center">
+                <tr>
+                    <td>Live</td>
+                    <td>Recorded Session</td>
+                </tr>
+                <tr>
+                    <td>
+                        <video id="live" width="400" height="400" muted autoplay />
+                    </td>
+                    <td> <video id="preview" width="400" height="400" autoplay /></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script>
+        var chunks = [];
+        var mediaRecorder;
+        function upload() {
+            console.log("recorder uploading");
+        }
+        function download() {
+            console.log("recorder downloading");
+            const link = document.createElement("a")
+            var blob = new Blob(chunks, { 'type': 'application/x-mp4URL' });
+            var url = window.URL.createObjectURL(blob);
+            link.name = "test.mp4";
+            link.href = url;
+            link.click();
+        }
+        function preview() {
+            console.log("recorder previewed");
+            var blob = new Blob(chunks, { 'type': 'application/x-mpegURL' });
+            var url = window.URL.createObjectURL(blob);
+            document.getElementById('preview').src = url;
+        }
+        function stop() {
+            console.log("recorder stopped");
+            mediaRecorder.stream.getTracks()[0].stop();
+            mediaRecorder.stream.getTracks()[1].stop();
+            document.getElementById('preview').pause();
+            mediaRecorder.stop();
+        }
+        function record() {
+            chunks = [];
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia(
+                    {
+                        video: true,
+                        audio: true
+                    })
+                    .then(function (stream) {
+                        console.log("recorder started");
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.start(1000);
+                        document.getElementById('live').srcObject = stream;
+                        mediaRecorder.ondataavailable = function (e) {
+                            chunks.push(e.data);
+                        }
+                    })
+                    .catch(function (err) {
+                        console.log('The following getUserMedia error occured: ' + err);
+                    }
+                    );
+            } else {
+                console.log('getUserMedia not supported on your browser!');
+            }
+        }
+    </script>
+</body>
+
+</html>
